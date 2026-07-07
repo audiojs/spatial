@@ -1,0 +1,30 @@
+{
+  "name": "@audio/spatial-widener",
+  "version": "1.0.0",
+  "description": "Stereo widener — mid/side processing to adjust stereo width",
+  "type": "module",
+  "sideEffects": false,
+  "main": "stereo-widener.js",
+  "exports": {
+    ".": "./stereo-widener.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "stereo-widener.js"
+  ],
+  "keywords": [
+    "audio",
+    "dsp",
+    "spatial",
+    "stereo",
+    "widener"
+  ],
+  "license": "MIT",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

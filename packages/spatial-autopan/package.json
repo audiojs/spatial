@@ -1,0 +1,30 @@
+{
+  "name": "@audio/spatial-autopan",
+  "version": "1.0.0",
+  "description": "Auto-panner — LFO-driven stereo panning. Constant-power cos/sin law",
+  "type": "module",
+  "sideEffects": false,
+  "main": "auto-panner.js",
+  "exports": {
+    ".": "./auto-panner.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "auto-panner.js"
+  ],
+  "keywords": [
+    "audio",
+    "dsp",
+    "spatial",
+    "stereo",
+    "autopan"
+  ],
+  "license": "MIT",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

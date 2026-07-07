@@ -1,0 +1,47 @@
+{
+  "name": "@audio/spatial",
+  "version": "1.0.0",
+  "type": "module",
+  "sideEffects": false,
+  "description": "Spatial & channel tools — umbrella for @audio/spatial-* atoms (panner, widener, haas, auto-panner, crossfeed)",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js"
+  ],
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node test.js",
+    "test:all": "npm test --workspaces --if-present && npm test",
+    "publish:all": "npm publish --workspaces && npm publish"
+  },
+  "dependencies": {
+    "@audio/spatial-panner": "^1.0.0",
+    "@audio/spatial-widener": "^1.0.0",
+    "@audio/spatial-haas": "^1.0.0",
+    "@audio/spatial-autopan": "^1.0.0",
+    "@audio/spatial-crossfeed": "^1.0.0"
+  },
+  "keywords": [
+    "audio",
+    "dsp",
+    "spatial",
+    "stereo",
+    "panner",
+    "crossfeed",
+    "haas"
+  ],
+  "license": "MIT",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

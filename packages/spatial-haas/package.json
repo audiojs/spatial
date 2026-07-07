@@ -1,0 +1,30 @@
+{
+  "name": "@audio/spatial-haas",
+  "version": "1.0.0",
+  "description": "Haas effect — delays one channel by 1–35 ms to create phantom stereo image",
+  "type": "module",
+  "sideEffects": false,
+  "main": "haas.js",
+  "exports": {
+    ".": "./haas.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "haas.js"
+  ],
+  "keywords": [
+    "audio",
+    "dsp",
+    "spatial",
+    "stereo",
+    "haas"
+  ],
+  "license": "MIT",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
