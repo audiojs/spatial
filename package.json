@@ -16,7 +16,7 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "node test.js",
+    "test": "node test.js && node test/crossfeed.js",
     "test:all": "npm test --workspaces --if-present && npm test",
     "publish:all": "npm publish --workspaces && npm publish"
   },
@@ -43,5 +43,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "tst": "^9.4.0"
   }
 }

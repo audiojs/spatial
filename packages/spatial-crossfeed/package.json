@@ -10,7 +10,8 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "crossfeed.js"
+    "crossfeed.js",
+    "crossfeed.d.ts"
   ],
   "keywords": [
     "audio",
@@ -29,5 +30,6 @@
   },
   "dependencies": {
     "digital-filter": "^2.0.0"
-  }
+  },
+  "types": "crossfeed.d.ts"
 }
