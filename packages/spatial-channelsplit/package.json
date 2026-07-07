@@ -1,0 +1,18 @@
+{
+  "name": "@audio/spatial-channelsplit",
+  "version": "0.0.0",
+  "description": "Channel split/combine — multi-channel ↔ mono planes (FFmpeg channelsplit)",
+  "type": "module",
+  "sideEffects": false,
+  "private": true,
+  "keywords": [
+    "audio",
+    "dsp",
+    "channels"
+  ],
+  "license": "MIT",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@audio/spatial-delay",
+  "version": "0.0.0",
+  "description": "Per-channel delay in ms/samples (FFmpeg adelay)",
+  "type": "module",
+  "sideEffects": false,
+  "private": true,
+  "keywords": [
+    "audio",
+    "dsp",
+    "delay",
+    "channels"
+  ],
+  "license": "MIT",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
+  "engines": {
+    "node": ">=18"
+  }
+}
