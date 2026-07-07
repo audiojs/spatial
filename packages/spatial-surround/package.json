@@ -1,10 +1,17 @@
 {
   "name": "@audio/spatial-surround",
-  "version": "0.0.0",
-  "description": "Stereo → 5.1 surround upmix",
+  "version": "1.0.0",
+  "description": "Stereo → 5.1 matrix upmix — C/LFE/Ls/Rs derivation (documented simple matrix)",
   "type": "module",
   "sideEffects": false,
-  "private": true,
+  "main": "surround.js",
+  "exports": {
+    ".": "./surround.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "surround.js"
+  ],
   "keywords": [
     "audio",
     "dsp",
@@ -15,5 +22,8 @@
   "author": "Dmitry Iv. <dfcreative@gmail.com>",
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

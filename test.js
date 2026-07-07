@@ -87,3 +87,53 @@ test('autoPanner — sweeps between channels', () => {
 	ok(maxL > 0.9 && maxR > 0.9, `both sides reached: L=${maxL.toFixed(2)} R=${maxR.toFixed(2)}`)
 	ok(L.every(isFinite) && R.every(isFinite), 'no NaN/Inf')
 })
+
+import { msEncode, msDecode, channelDelay, microshift, surround } from './index.js'
+
+test('midside — roundtrip identity; mono has zero side', () => {
+	let L = sine(440, 4096), R = sine(700, 4096)
+	let refL = Float64Array.from(L), refR = Float64Array.from(R)
+	msDecode(msEncode([L, R]))
+	for (let i = 0; i < L.length; i += 41) {
+		assert.ok(Math.abs(L[i] - refL[i]) < 1e-6 && Math.abs(R[i] - refR[i]) < 1e-6)
+	}
+	let M = Float32Array.from(sine(440, 1024)), C = Float32Array.from(M)
+	let [, S] = msEncode([M, C])
+	assert.ok(S.every(v => Math.abs(v) < 1e-7), 'mono → zero side')
+})
+
+test('channelDelay — sample-exact shift', () => {
+	let a = sine(440, 4096), ref = Float64Array.from(a)
+	channelDelay([a], { samples: [100] })
+	assert.ok(Math.abs(a[150] - ref[50]) < 1e-7 && a[50] === 0)
+})
+
+test('microshift — wet channels detune ±cents', () => {
+	let L = sine(440, 44100), R = sine(440, 44100)
+	microshift([L, R], { cents: 30, mix: 1, fs: 44100 })
+	let zc = (d, from, to) => {
+		let c = 0
+		for (let i = from + 1; i < to; i++) if ((d[i - 1] < 0) !== (d[i] < 0)) c++
+		return c / 2 * 44100 / (to - from)
+	}
+	let fL = zc(L, 8192, 36000), fR = zc(R, 8192, 36000)
+	assert.ok(fL > 443 && fL < 452, 'L up (' + fL.toFixed(1) + ')')
+	assert.ok(fR > 428 && fR < 437, 'R down (' + fR.toFixed(1) + ')')
+})
+
+test('surround — 6 channels, center holds mid, LFE lowpassed', () => {
+	let n = 44100
+	let L = new Float32Array(n), R = new Float32Array(n)
+	for (let i = 0; i < n; i++) {
+		let mid = 0.5 * Math.sin(2 * Math.PI * 300 * i / 44100)
+		let side = 0.3 * Math.sin(2 * Math.PI * 2000 * i / 44100)
+		L[i] = mid + side; R[i] = mid - side
+	}
+	let chans = surround([L, R], { fs: 44100 })
+	assert.equal(chans.length, 6)
+	let [, , C, LFE, Ls] = chans
+	let g = (d, f) => { let w = 2 * Math.PI * f / 44100, cw = Math.cos(w), s1 = 0, s2 = 0; for (let i = 4096; i < d.length - 4096; i++) { let s0 = d[i] + 2 * cw * s1 - s2; s2 = s1; s1 = s0 } return Math.sqrt(Math.max(0, s1 * s1 + s2 * s2 - 2 * cw * s1 * s2)) / (d.length - 8192) }
+	assert.ok(g(C, 300) > g(C, 2000) * 5, 'center holds mid content')
+	assert.ok(g(Ls, 2000) > g(Ls, 300) * 5, 'surrounds hold side content')
+	assert.ok(g(LFE, 300) > g(LFE, 2000) * 20, 'LFE lowpassed')
+})
