@@ -50,6 +50,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "tst": "^9.4.0"
+    "tst": "^9.4.0",
+    "digital-filter": "^2.3.0"
   }
 }

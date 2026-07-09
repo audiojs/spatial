@@ -5,8 +5,7 @@
  * @module  audio-filter/eq/crossfeed
  */
 
-import { lowpass } from 'digital-filter/iir/biquad.js'
-import filter from 'digital-filter/core/filter.js'
+import { lowpass, filter } from '@audio/biquad'
 
 /**
  * @param {Float64Array} left - Left channel (modified in-place)
