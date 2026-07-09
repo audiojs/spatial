@@ -1,16 +1,18 @@
 {
   "name": "@audio/spatial-widener",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Stereo widener — mid/side processing to adjust stereo width",
   "type": "module",
   "sideEffects": false,
   "main": "stereo-widener.js",
   "exports": {
     ".": "./stereo-widener.js",
+    "./atom": "./atom.js",
     "./package.json": "./package.json"
   },
   "files": [
-    "stereo-widener.js"
+    "stereo-widener.js",
+    "atom.js"
   ],
   "keywords": [
     "audio",
@@ -26,5 +28,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "atom": "./atom.js"
 }

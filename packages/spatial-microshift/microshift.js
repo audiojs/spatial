@@ -1,7 +1,7 @@
 // Micro-pitch stereo widener (Eventide H3000/MicroShift class) — L detuned up, R detuned
 // down by a few cents via 2-head varispeed ring readers, blended with the dry signal.
 
-function shifter (cents, size) {
+export function shifter (cents, size) {
 	let ring = new Float32Array(size)
 	let w = 0, r = 0
 	let rate = 2 ** (cents / 1200)
