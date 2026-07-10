@@ -53,5 +53,9 @@
   "devDependencies": {
     "tst": "^9.4.0",
     "digital-filter": "^2.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/audiojs/spatial.git"
   }
 }

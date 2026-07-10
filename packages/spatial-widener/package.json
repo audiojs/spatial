@@ -33,5 +33,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "audio": "./audio.js"
+  "audio": "./audio.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/audiojs/spatial.git",
+    "directory": "packages/spatial-widener"
+  }
 }
