@@ -1,4 +1,4 @@
-// atom manifest — wraps the M/S stereo widener kernel per @audio/atom CONTRACT.
+// atom manifest — wraps the M/S stereo widener kernel per @audio/compile CONTRACT.
 // Stateless per-sample matrix; width is live (host ramps patched values click-free).
 // Mono input passes through — there is no side signal to scale.
 

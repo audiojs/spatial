@@ -1,4 +1,4 @@
-// atom manifest — wraps the 5.1 matrix upmix kernel per @audio/atom CONTRACT.
+// atom manifest — wraps the 5.1 matrix upmix kernel per @audio/compile CONTRACT.
 // The kernel is batch-shaped (its surround delay line and LFE lowpass state live and
 // die inside one call), so per-block hosting would reset both at every boundary —
 // declared streaming: false instead: the host buffers the whole input and calls

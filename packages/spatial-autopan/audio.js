@@ -1,4 +1,4 @@
-// atom manifest — wraps the LFO auto-panner kernel per @audio/atom CONTRACT.
+// atom manifest — wraps the LFO auto-panner kernel per @audio/compile CONTRACT.
 // The kernel keeps LFO phase on the params object — the manifest owns one persistent
 // params object per instance, so the sweep stays continuous across blocks. `rate` and
 // `depth` are live: phase accumulates incrementally, so rate changes bend the sweep

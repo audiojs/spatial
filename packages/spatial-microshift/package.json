@@ -1,18 +1,18 @@
 {
   "name": "@audio/spatial-microshift",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Micro-pitch stereo widener — ±cents detuned copies (H3000 MicroShift class)",
   "type": "module",
   "sideEffects": false,
   "main": "microshift.js",
   "exports": {
     ".": "./microshift.js",
-    "./atom": "./atom.js",
+    "./audio": "./audio.js",
     "./package.json": "./package.json"
   },
   "files": [
     "microshift.js",
-    "atom.js"
+    "audio.js"
   ],
   "keywords": [
     "audio",
@@ -28,5 +28,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "atom": "./atom.js"
+  "audio": "./audio.js"
 }

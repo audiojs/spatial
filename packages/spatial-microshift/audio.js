@@ -1,4 +1,4 @@
-// atom manifest — wraps the micro-pitch widener per @audio/atom CONTRACT.
+// atom manifest — wraps the micro-pitch widener per @audio/compile CONTRACT.
 // The batch kernel builds its two detune heads per call, so it can't stream; the
 // manifest builds them once from the exported `shifter` factory and keeps them in
 // closure — state survives across blocks. `cents` bakes each head's varispeed rate

@@ -1,4 +1,4 @@
-// atom manifest — wraps the constant-power panner kernel per @audio/atom CONTRACT.
+// atom manifest — wraps the constant-power panner kernel per @audio/compile CONTRACT.
 // Stateless cos/sin law over the mono mid — distinct from a balance control: the
 // kernel collapses the stereo image to mid, then places it. `pan` is live.
 

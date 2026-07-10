@@ -1,4 +1,4 @@
-// atom manifest — wraps the Haas-delay kernel per @audio/atom CONTRACT.
+// atom manifest — wraps the Haas-delay kernel per @audio/compile CONTRACT.
 // The kernel keeps its delay ring on the params object — the manifest owns one
 // persistent params object per instance, so state survives across blocks. `time`
 // sizes the ring at construction (flags: restart); `channel` selects which ring is

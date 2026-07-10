@@ -1,4 +1,4 @@
-// atom manifest — wraps the M/S matrix kernel per @audio/atom CONTRACT.
+// atom manifest — wraps the M/S matrix kernel per @audio/compile CONTRACT.
 // Stateless per-sample matrix; `mode` and `width` are live. encode maps L/R → M/S
 // (channel 0 = mid, channel 1 = side) for downstream M/S processing; decode maps
 // back, scaling the side by `width` (1 = unity round-trip).

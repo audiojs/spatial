@@ -1,18 +1,18 @@
 {
   "name": "@audio/spatial-surround",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Stereo → 5.1 matrix upmix — C/LFE/Ls/Rs derivation (documented simple matrix)",
   "type": "module",
   "sideEffects": false,
   "main": "surround.js",
   "exports": {
     ".": "./surround.js",
-    "./atom": "./atom.js",
+    "./audio": "./audio.js",
     "./package.json": "./package.json"
   },
   "files": [
     "surround.js",
-    "atom.js"
+    "audio.js"
   ],
   "keywords": [
     "audio",
@@ -28,5 +28,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "atom": "./atom.js"
+  "audio": "./audio.js"
 }
