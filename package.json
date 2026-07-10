@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "sideEffects": false,
   "description": "Spatial & channel tools — umbrella for @audio/spatial-* atoms (panner, widener, haas, auto-panner, crossfeed)",
