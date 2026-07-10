@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-surround",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Stereo → 5.1 matrix upmix — C/LFE/Ls/Rs derivation (documented simple matrix)",
   "type": "module",
   "sideEffects": false,

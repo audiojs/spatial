@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-widener",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Stereo widener — mid/side processing to adjust stereo width",
   "type": "module",
   "sideEffects": false,

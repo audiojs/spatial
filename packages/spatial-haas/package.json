@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-haas",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Haas effect — delays one channel by 1–35 ms to create phantom stereo image",
   "type": "module",
   "sideEffects": false,
