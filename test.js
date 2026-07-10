@@ -66,6 +66,111 @@ test('panner — pan=-1 full left', () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Binaural — structural (Brown & Duda 1998, IEEE TSAP 6(5), pp. 476-488)
+// ═══════════════════════════════════════════════════════════════════════════
+
+test('binaural — ITD matches the spherical two-branch formula at az=90 (Brown & Duda 1998, eq. 2)', () => {
+	let fs = 44100, a = 0.0875, c = 343, N = 512
+	let L = impulse(N), R = impulse(N)
+	fx.binaural(L, R, { azimuth: 90, headRadius: a, fs })
+	// near ear (theta_inc=0): T = -(a/c)cos(0) = -a/c; far ear (theta_inc=pi): T = (a/c)(pi-pi/2) = (a/c)(pi/2)
+	// normalized so the near ear carries zero latency: ITD = T_far - T_near = (a/c)(pi/2 + 1)
+	let expectedLag = (a / c) * (1 + Math.PI / 2) * fs   // ≈ 28.9 samples @ 44100
+	let best = 0, bestScore = -Infinity
+	for (let lag = 0; lag <= 40; lag++) {
+		let score = 0
+		for (let i = lag; i < N; i++) score += R[i - lag] * L[i]
+		if (score > bestScore) { bestScore = score; best = lag }
+	}
+	ok(Math.abs(best - expectedLag) <= 1, `measured lag ${best} ≈ expected ${expectedLag.toFixed(2)} samples`)
+})
+
+test('binaural — ITD is zero at center (az=0)', () => {
+	let N = 512
+	let L = impulse(N), R = impulse(N)
+	fx.binaural(L, R, { azimuth: 0, fs: 44100 })
+	let maxDiff = 0
+	for (let i = 0; i < N; i++) maxDiff = Math.max(maxDiff, Math.abs(L[i] - R[i]))
+	ok(maxDiff < 1e-9, `center: L ≈ R, maxDiff=${maxDiff}`)
+})
+
+test('binaural — head-shadow ILD grows with frequency; ipsi/contra separation ≥6dB at 4kHz (eq. 3-5)', () => {
+	let fs = 44100, N = 8192, tail0 = 4096
+	let rmsDb = sig => {
+		let sum = 0
+		for (let i = tail0; i < N; i++) sum += sig[i] * sig[i]
+		return 10 * Math.log10(sum / (N - tail0))
+	}
+	let measure = freq => {
+		let L = sine(freq, N, fs), R = sine(freq, N, fs)
+		let dryDb = rmsDb(L)   // L, R dry are identical
+		fx.binaural(L, R, { azimuth: 90, fs })
+		// az=90: right ear is ipsilateral (theta_inc≈0), left is contralateral (theta_inc≈180)
+		return { ipsiDb: rmsDb(R) - dryDb, contraDb: rmsDb(L) - dryDb }
+	}
+	let m500 = measure(500), m4k = measure(4000)
+	let attn500 = -m500.contraDb, attn4k = -m4k.contraDb   // positive = cut, dB
+	ok(attn4k >= attn500 + 3, `contralateral attenuation grows with freq: 500Hz=${attn500.toFixed(2)}dB, 4kHz=${attn4k.toFixed(2)}dB`)
+	ok(m4k.ipsiDb - m4k.contraDb >= 6, `ipsi/contra separation ≥6dB at 4kHz: ${(m4k.ipsiDb - m4k.contraDb).toFixed(2)}dB`)
+})
+
+test('binaural — left/right mirror symmetry: az=+40 swaps az=-40', () => {
+	let fs = 44100, N = 4096
+	let render = az => {
+		let L = sine(300, N, fs), R = sine(300, N, fs)
+		fx.binaural(L, R, { azimuth: az, fs })
+		return [L, R]
+	}
+	let [Lp, Rp] = render(40), [Lm, Rm] = render(-40)
+	let maxErr = 0
+	for (let i = 0; i < N; i++) maxErr = Math.max(maxErr, Math.abs(Lp[i] - Rm[i]), Math.abs(Rp[i] - Lm[i]))
+	ok(maxErr < 1e-6, `mirror symmetry: max err=${maxErr}`)
+})
+
+test('binaural — mix=0 is bit-exact identity', () => {
+	let N = 1024
+	let L = sine(440, N), R = sine(220, N)
+	let origL = Float64Array.from(L), origR = Float64Array.from(R)
+	fx.binaural(L, R, { azimuth: 90, mix: 0, fs: 44100 })
+	let same = true
+	for (let i = 0; i < N; i++) if (L[i] !== origL[i] || R[i] !== origR[i]) same = false
+	ok(same, 'mix=0: bit-exact passthrough')
+})
+
+test('binaural — no clicks across an azimuth automation boundary (shared state)', () => {
+	let fs = 44100, N = 2048
+	let full = sine(220, N * 2, fs)
+	for (let i = 0; i < full.length; i++) full[i] *= 0.5   // 0.5-amplitude input
+	let L1 = Float64Array.from(full.subarray(0, N)), R1 = Float64Array.from(full.subarray(0, N))
+	let L2 = Float64Array.from(full.subarray(N)), R2 = Float64Array.from(full.subarray(N))
+	let params = { azimuth: 0, fs }
+	fx.binaural(L1, R1, params)
+	params.azimuth = 60   // jump, same params object → state (ring, filters, smoothed az) carries over
+	fx.binaural(L2, R2, params)
+	let win = 8
+	let seqL = [...L1.slice(-win), ...L2.slice(0, win)]
+	let seqR = [...R1.slice(-win), ...R2.slice(0, win)]
+	let maxDelta = 0
+	for (let i = 1; i < seqL.length; i++) maxDelta = Math.max(maxDelta, Math.abs(seqL[i] - seqL[i - 1]), Math.abs(seqR[i] - seqR[i - 1]))
+	ok(maxDelta < 0.1, `max boundary delta=${maxDelta.toFixed(4)} (0.5-amp sine, click threshold 0.1)`)
+})
+
+test('binaural — deterministic, length-preserving, finite', () => {
+	let N = 1000, fs = 44100
+	let run = () => {
+		let L = sine(300, N, fs), R = sine(500, N, fs)
+		fx.binaural(L, R, { azimuth: 33, distance: 2, headRadius: 0.09, mix: 0.7, fs })
+		return [L, R]
+	}
+	let [L1, R1] = run(), [L2, R2] = run()
+	is(L1.length, N); is(R1.length, N)
+	ok(L1.every(isFinite) && R1.every(isFinite), 'no NaN/Inf')
+	let eq = true
+	for (let i = 0; i < N; i++) if (L1[i] !== L2[i] || R1[i] !== R2[i]) eq = false
+	ok(eq, 'deterministic: identical params/input → identical output')
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Utility
 // ═══════════════════════════════════════════════════════════════════════════
 

@@ -26,6 +26,7 @@
     "@audio/spatial-haas": "^1.0.0",
     "@audio/spatial-autopan": "^1.0.0",
     "@audio/spatial-crossfeed": "^1.0.0",
+    "@audio/spatial-binaural": "^0.1.0",
     "@audio/spatial-midside": "^1.0.0",
     "@audio/spatial-channelsplit": "^1.0.0",
     "@audio/spatial-delay": "^1.0.0",
