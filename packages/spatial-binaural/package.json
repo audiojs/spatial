@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-binaural",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Structural binaural panner — Brown-Duda spherical-head ITD + head-shadow ILD (no HRIR data)",
   "type": "module",
   "sideEffects": false,
@@ -15,9 +15,11 @@
   },
   "files": [
     "binaural.js",
+    "binaural.d.ts",
     "audio.js",
     "audio.d.ts"
   ],
+  "types": "binaural.d.ts",
   "keywords": [
     "audio",
     "dsp",
@@ -39,5 +41,6 @@
     "type": "git",
     "url": "git+https://github.com/audiojs/spatial.git",
     "directory": "packages/spatial-binaural"
-  }
+  },
+  "funding": "https://github.com/sponsors/audiojs"
 }

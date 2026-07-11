@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-delay",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Per-channel delay in ms/samples (FFmpeg adelay)",
   "type": "module",
   "sideEffects": false,
@@ -10,8 +10,10 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "delay.js"
+    "delay.js",
+    "delay.d.ts"
   ],
+  "types": "delay.d.ts",
   "keywords": [
     "audio",
     "dsp",
@@ -30,5 +32,6 @@
     "type": "git",
     "url": "git+https://github.com/audiojs/spatial.git",
     "directory": "packages/spatial-delay"
-  }
+  },
+  "funding": "https://github.com/sponsors/audiojs"
 }

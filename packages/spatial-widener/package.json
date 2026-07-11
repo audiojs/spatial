@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-widener",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Stereo widener — mid/side processing to adjust stereo width",
   "type": "module",
   "sideEffects": false,
@@ -15,9 +15,11 @@
   },
   "files": [
     "stereo-widener.js",
+    "stereo-widener.d.ts",
     "audio.js",
     "audio.d.ts"
   ],
+  "types": "stereo-widener.d.ts",
   "keywords": [
     "audio",
     "dsp",
@@ -38,5 +40,6 @@
     "type": "git",
     "url": "git+https://github.com/audiojs/spatial.git",
     "directory": "packages/spatial-widener"
-  }
+  },
+  "funding": "https://github.com/sponsors/audiojs"
 }

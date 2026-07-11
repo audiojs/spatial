@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-channelsplit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Channel split/combine — multichannel ↔ mono planes (FFmpeg channelsplit)",
   "type": "module",
   "sideEffects": false,
@@ -10,8 +10,10 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "channelsplit.js"
+    "channelsplit.js",
+    "channelsplit.d.ts"
   ],
+  "types": "channelsplit.d.ts",
   "keywords": [
     "audio",
     "dsp",
@@ -30,5 +32,6 @@
     "type": "git",
     "url": "git+https://github.com/audiojs/spatial.git",
     "directory": "packages/spatial-channelsplit"
-  }
+  },
+  "funding": "https://github.com/sponsors/audiojs"
 }
