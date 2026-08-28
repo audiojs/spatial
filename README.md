@@ -1,9 +1,10 @@
 # @audio/spatial
 
-> Spatial & channel tools — stereo imaging, panning, headphone crossfeed.
+> Spatial & channel tools — stereo imaging, panning, headphone crossfeed, ambisonics.
 
 | Package | Status | What |
 |---|---|---|
+| `@audio/spatial-ambisonic` | ✔ | Ambisonics — encode / rotate / decode, 1st–3rd order (HOA), ACN/SN3D (AmbiX), FuMa conversion, binaural via `spatial-binaural`, DirAC direction analysis |
 | `@audio/spatial-panner` | ✔ | equal-power stereo panner |
 | `@audio/spatial-widener` | ✔ | mid/side stereo widener |
 | `@audio/spatial-haas` | ✔ | Haas precedence effect |

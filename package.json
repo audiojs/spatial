@@ -31,7 +31,8 @@
     "@audio/spatial-channelsplit": "^1.0.0",
     "@audio/spatial-delay": "^1.0.0",
     "@audio/spatial-microshift": "^1.0.0",
-    "@audio/spatial-surround": "^1.0.0"
+    "@audio/spatial-surround": "^1.0.0",
+    "@audio/spatial-ambisonic": "^0.1.0"
   },
   "keywords": [
     "audio",

@@ -12,3 +12,4 @@ export { split as channelSplit, combine as channelCombine } from '@audio/spatial
 export { default as channelDelay } from '@audio/spatial-delay'
 export { default as microshift } from '@audio/spatial-microshift'
 export { default as surround } from '@audio/spatial-surround'
+export { default as ambisonic, encode as ambisonicEncode, decode as ambisonicDecode, rotate as ambisonicRotate, direction as ambisonicDirection } from '@audio/spatial-ambisonic'
