@@ -242,3 +242,19 @@ test('surround — 6 channels, center holds mid, LFE lowpassed', () => {
 	assert.ok(g(Ls, 2000) > g(Ls, 300) * 5, 'surrounds hold side content')
 	assert.ok(g(LFE, 300) > g(LFE, 2000) * 20, 'LFE lowpassed')
 })
+
+// -- 2026-08 atom: ambisonic — encode → rotate → decode through the umbrella (depth lives in the package suite) --
+test('ambisonic — a source at +90° encodes, rotates back to front, and decodes loudest at the front speaker', () => {
+	let fs = 44100, n = 4096, mono = new Float32Array(n)
+	for (let i = 0; i < n; i++) mono[i] = 0.5 * Math.sin(2 * Math.PI * 440 * i / fs)
+	let enc = fx.ambisonicEncode(mono, { order: 3, az: 90, el: 0 })
+	is(enc.length, 16, 'third order = 16 ACN channels')
+	let rot = fx.ambisonicRotate(enc, { yaw: -90 })
+	let rms = d => { let s = 0; for (let i = 0; i < d.length; i++) s += d[i] * d[i]; return Math.sqrt(s / d.length) }
+	ok(rms(rot[1]) < 1e-3 * rms(rot[0]) + 1e-6, 'Y (left-right) component vanishes after rotating to front')
+	let spk = fx.ambisonicDecode(rot, { layout: [{ az: 0, el: 0 }, { az: 90, el: 0 }, { az: 180, el: 0 }, { az: -90, el: 0 }], fs })
+	is(spk.length, 4)
+	ok(rms(spk[0]) > 3 * rms(spk[1]) && rms(spk[0]) > 3 * rms(spk[2]), 'front speaker dominates (order 3: ' + (rms(spk[0]) / rms(spk[1])).toFixed(1) + '× the side)')
+	let { az } = fx.ambisonicDirection(enc, { fs })
+	ok(Math.abs(az - 90) < 3, 'direction analysis recovers +90°: ' + az.toFixed(1))
+})
