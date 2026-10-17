@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "type": "module",
   "sideEffects": false,
   "description": "Spatial & channel tools — umbrella for @audio/spatial-* atoms (panner, widener, haas, auto-panner, crossfeed)",
@@ -10,11 +10,16 @@
       "types": "./index.d.ts",
       "default": "./index.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./*": {
+      "types": "./members/*.d.ts",
+      "default": "./members/*.js"
+    }
   },
   "files": [
     "index.js",
-    "*.d.ts"
+    "*.d.ts",
+    "members/"
   ],
   "workspaces": [
     "packages/*"
@@ -22,20 +27,22 @@
   "scripts": {
     "test": "node test.js && node test/crossfeed.js",
     "test:all": "npm test --workspaces --if-present && npm test",
-    "publish:all": "npm publish --workspaces && npm publish"
+    "publish:all": "npm publish --workspaces && npm publish",
+    "members": "node scripts/members.js",
+    "prepublishOnly": "node scripts/members.js --check"
   },
   "dependencies": {
-    "@audio/spatial-panner": "^1.0.0",
-    "@audio/spatial-widener": "^1.0.0",
-    "@audio/spatial-haas": "^1.0.0",
-    "@audio/spatial-autopan": "^1.0.0",
-    "@audio/spatial-crossfeed": "^1.0.0",
-    "@audio/spatial-binaural": "^0.1.0",
-    "@audio/spatial-midside": "^1.0.0",
-    "@audio/spatial-channelsplit": "^1.0.0",
-    "@audio/spatial-delay": "^1.0.0",
-    "@audio/spatial-microshift": "^1.0.0",
-    "@audio/spatial-surround": "^1.0.0",
+    "@audio/spatial-panner": "^1.1.3",
+    "@audio/spatial-widener": "^1.1.3",
+    "@audio/spatial-haas": "^1.1.3",
+    "@audio/spatial-autopan": "^1.1.3",
+    "@audio/spatial-crossfeed": "^1.1.1",
+    "@audio/spatial-binaural": "^0.1.1",
+    "@audio/spatial-midside": "^1.1.3",
+    "@audio/spatial-channelsplit": "^1.0.1",
+    "@audio/spatial-delay": "^1.0.1",
+    "@audio/spatial-microshift": "^1.1.3",
+    "@audio/spatial-surround": "^1.1.3",
     "@audio/spatial-ambisonic": "^0.1.0"
   },
   "keywords": [
