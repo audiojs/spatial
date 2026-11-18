@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-microshift",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "description": "Micro-pitch stereo widener — ±cents detuned copies (H3000 MicroShift class)",
   "type": "module",
   "sideEffects": false,
