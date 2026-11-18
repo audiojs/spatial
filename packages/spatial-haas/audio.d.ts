@@ -21,11 +21,11 @@ export interface HaasOptions {
 export declare const haas: {
   (ctx: Ctx): Process
   channels: 2
-  tail: (ctx: { sampleRate: number, params: Live }) => number
+  tail: (at: { sampleRate: number, params: Live, buffers: {} }) => number
   params: {
-    /** 1..35 ms (default 20) [restart] */
+    /** 1..35 ms (default 20) */
     "time": { type: "number", default: 20 }
-    /** default "right" [restart] */
+    /** default "right" */
     "channel": { type: "enum", values: ["left","right"], default: "right" }
   }
 }

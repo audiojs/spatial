@@ -25,12 +25,13 @@ export interface BinauralOptions {
 export declare const binaural: {
   (ctx: Ctx): Process
   channels: 2
+  tail: (at: { sampleRate: number, params: Live, buffers: {} }) => number
   params: {
     /** -180..180 deg (default 0) */
     "azimuth": { type: "number", default: 0 }
     /** 0..10 m (default 1) */
     "distance": { type: "number", default: 1 }
-    /** 0.05..0.12 m (default 0.0875) [restart] */
+    /** 0.05..0.12 m (default 0.0875) */
     "headRadius": { type: "number", default: 0.0875 }
     /** 0..1 (default 1) */
     "mix": { type: "number", default: 1 }

@@ -20,6 +20,8 @@ panner(left, right, { pan: -0.5 })   // both modified in place
 |---|---|---|
 | `pan` | `0` | -1 (full left) .. 0 (center) .. +1 (full right) |
 
+`pan(left, right, pans, moving)` does the same in place and returns nothing, a host's block: the pan is `pans[i]` for sample `i` while `moving` is 1 (the gains worked out for each sample), `pans[0]` throughout when it is 0. The `audio.js` manifest glides a host's ramp of `pan` sample by sample into it, so a move is one line however the host cuts its calls; held, the gains are worked out once a block, as `panner` works them out.
+
 **Use when:** static or automated stereo placement; the LFO-driven sweep is [`spatial-autopan`](https://github.com/audiojs/spatial/tree/main/packages/spatial-autopan).
 
 ---

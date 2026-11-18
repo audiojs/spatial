@@ -21,7 +21,7 @@ export interface SurroundOptions {
 export declare const surround: {
   (ctx: Ctx): Process
   channels: {"inputs":2,"outputs":6}
-  streaming: false
+  tail: (at: { sampleRate: number, params: Live, buffers: {} }) => number
   params: {
     /** 1..50 ms (default 12) */
     "delay": { type: "number", default: 12 }

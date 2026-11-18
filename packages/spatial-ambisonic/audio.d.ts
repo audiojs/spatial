@@ -22,7 +22,7 @@ export interface AmbisonicPannerOptions {
 
 export declare const ambisonicPanner: {
   (ctx: Ctx): Process
-  channels: {"inputs":1,"outputs":["ambisonic-1","ambisonic-2","ambisonic-3"]}
+  channels: {"inputs":1,"outputs":[{"layouts":["ambisonic-1","ambisonic-2","ambisonic-3"]}]}
   params: {
     /** -180..180 deg (default 0) */
     "az": { type: "number", default: 0 }
@@ -45,7 +45,7 @@ export interface AmbisonicDecoderOptions {
 
 export declare const ambisonicDecoder: {
   (ctx: Ctx): Process
-  channels: {"inputs":["ambisonic-1","ambisonic-2","ambisonic-3"],"outputs":["stereo","quad","5.1","7.1"]}
+  channels: {"inputs":[{"layouts":["ambisonic-1","ambisonic-2","ambisonic-3"]}],"outputs":[{"layouts":["stereo","quad","5.1","7.1"]}]}
   params: {
     "weighting": { type: "enum", values: ["basic", "maxre", "inphase"], default: "maxre" }
     "method": { type: "enum", values: ["sampling", "basic"], default: "sampling" }
@@ -66,7 +66,7 @@ export interface AmbisonicRotateOptions {
 
 export declare const ambisonicRotate: {
   (ctx: Ctx): Process
-  channels: {"inputs":["ambisonic-1","ambisonic-2","ambisonic-3"],"outputs":["ambisonic-1","ambisonic-2","ambisonic-3"]}
+  channels: {"inputs":[{"layouts":["ambisonic-1","ambisonic-2","ambisonic-3"]}],"outputs":[{"layouts":["ambisonic-1","ambisonic-2","ambisonic-3"]}]}
   params: {
     /** -180..180 deg (default 0) */
     "yaw": { type: "number", default: 0 }

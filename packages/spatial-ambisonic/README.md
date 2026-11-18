@@ -59,11 +59,16 @@ Degrees. `yaw` is about the up axis with azimuth's own sign (positive yaw increa
 | `sh(az, el, order, norm)` | The `(order+1)²`-length encoding vector for one direction |
 | `decoderMatrix(order, layout, opts)` | The decode matrix `decode()` uses — one `Float32Array` row per speaker, LFE slots as an all-zero row |
 | `rotationMatrix(order, yaw, pitch, roll)` | The rotation matrix `rotate()` uses |
+| `shAt(out, at, [az, el], order)` | `sh()` to order 3 written into a typed array from index `at`, the same values to the bit in a `Float32Array`, allocating nothing |
+| `rotator(order)`, `rotationInto(rot)` | `rotationMatrix()` for a host, to order 3: what does not depend on the angles made once, then the matrix of `rot.v = [yaw, pitch, roll]` written into `rot.R` (row-major, the same values to the bit), allocating nothing |
+| `rotateRun(rot, inp, out, n, yaw, pitch, roll)` | `n` frames rotated by angles that move, frame `i` by `yaw[i]`, `pitch[i]`, `roll[i]`: the same rotation as a product of turns about the up axis and fixed quarter-turn matrices, cheap enough a frame at a time |
 | `fumaToAmbix(channels)` / `ambixToFuma(channels)` | FuMa (`WXYZ`.../maxN) ↔ ACN/SN3D. 1/4/9/16 channels (order 0-3). `W` carries FuMa's legacy -3 dB (`1/√2`) correction; `X`,`Y`,`Z` are a bare permutation; 2nd/3rd-order channels rescale per the AmbiX paper's conversion table |
 | `n3dToSn3d(channels)` / `sn3dToN3d(channels)` | Per-channel `1/√(2l+1)` / `√(2l+1)` |
 | `direction(channels, { fs, frame })` | DirAC-style direction-of-arrival + diffuseness from first-order B-format — see below |
 
 `direction()` returns `{ az, el, diffuseness, frames: [{t, az, el, diff}] }`. It needs the first four (W, Y, Z, X) channels: the active-intensity vector `I = ⟨W·[X,Y,Z]⟩` (frame-averaged) gives direction, and `diffuseness = 1 - |I| / ⟨(W²+X²+Y²+Z²)/2⟩` — 0 for one coherent plane wave, rising toward 1 as sound arrives from many uncorrelated directions at once. Useful for tests and as a "where is the sound" meter; it is not a full DirAC synthesis stage.
+
+The `audio.js` processors `ambisonicPanner`, `ambisonicDecoder` and `ambisonicRotate` allocate nothing in a block. A host's ramp of `az`, `el`, `gain`, `yaw`, `pitch` or `roll` is followed sample by sample, 32 frames late, so a move is one line however the host cuts its calls; held, each applies one SH vector (times the gain) or one matrix to the block, the values `sh()`, `rotationMatrix()` and `decoderMatrix()` give. A new decoder `weighting` or `method` crossfades from the matrix in force over 20 ms. An output channel may be an input's memory: a processor that writes a channel before it has read every input it needs at that frame reads from a copy of the inputs made at construction.
 
 ### Limits
 

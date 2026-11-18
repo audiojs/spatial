@@ -20,6 +20,8 @@ stereoWidener(left, right, { width: 1.5 })   // both modified in place
 |---|---|---|
 | `width` | `1.5` | 0 (mono) .. 1 (original) .. 2 (full side emphasis) |
 
+`widen(left, right, width, moving)` does the same in place and returns nothing: a host's block, allocating nothing. The width is an array, `width[i]` for sample `i` while `moving` is 1, `width[0]` throughout when it is 0; the `audio.js` manifest glides a host's ramp of `width` sample by sample into it.
+
 **Use when:** simple, cheap width control; `spatial-midside` is the matrix underneath if you need mid/side access directly.
 
 ---

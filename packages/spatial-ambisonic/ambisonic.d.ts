@@ -69,6 +69,19 @@ export function decoderMatrix(order: number, layout: AmbisonicLayout, options?: 
 /** The (order+1)²×(order+1)² SH rotation matrix for a yaw/pitch/roll rotation — one row per output channel. */
 export function rotationMatrix(order: number, yaw?: number, pitch?: number, roll?: number): Float32Array[]
 
+/** sh(v[0], v[1], order) (SN3D, order 0 to 3) written into `out` from index `at`: sh's values to the bit in a Float32Array. Allocates nothing. */
+export function shAt(out: Float32Array | Float64Array, at: number, v: ArrayLike<number>, order: number): void
+/** What a host rotates with, for one order (0 to 3): `v` [yaw, pitch, roll] in, `R` the matrix out (C×C row-major, float32,
+ *  rotationMatrix's to the bit), `Rt` its transpose before rounding, and the scratch and fixed matrices the two calls
+ *  below use. */
+export interface AmbisonicRotator { order: number; C: number; v: Float64Array; R: Float32Array; Rt: Float64Array; [k: string]: unknown }
+export function rotator(order: number): AmbisonicRotator
+/** rotationMatrix(order, ...rot.v) into rot.R. Allocates nothing. */
+export function rotationInto(rot: AmbisonicRotator): void
+/** `n` frames of `inp` rotated into `out` (may be the same) by angles that move, frame i by yaw[i], pitch[i], roll[i]
+ *  degrees, a frame at a time; at angles held, rotationMatrix's rotation within its rounding. Allocates nothing. */
+export function rotateRun(rot: AmbisonicRotator, inp: Float32Array[], out: Float32Array[], n: number, yaw: ArrayLike<number>, pitch: ArrayLike<number>, roll: ArrayLike<number>): void
+
 /** FuMa (WXYZ.../maxN) → ACN/SN3D (AmbiX). 1/4/9/16 channels in, same count out. */
 export function fumaToAmbix(channels: Float32Array[]): Float32Array[]
 /** ACN/SN3D (AmbiX) → FuMa (WXYZ.../maxN). Inverse of fumaToAmbix. */

@@ -22,6 +22,8 @@ microshift([left, right], { cents: 9, mix: 0.5 })
 | `mix` | `0.5` | Dry/wet, 0..1 |
 | `fs` | `44100` | Sample rate |
 
+For a host's block, `head(cents, size)` makes one reader's ring and state and `shift(head, x, y, mix, moving)` runs `x` through it into `y`, the mix `mix[0]` (an array, as a host hands a value), or `mix[i]` for sample `i` while `moving` is 1; it allocates nothing. The `audio.js` manifest glides a host's ramp of `mix` sample by sample so. Setting `head.st[2]` to `2 ** (cents / 1200)` between blocks changes the detune: the read goes on from where it is, so the pitch moves and nothing jumps (the `audio.js` manifest's `cents` is live so).
+
 **Use when:** subtle stereo widening with a pitch-modulation character, distinct from mid/side widening (`spatial-widener`) or delay-based widening (`spatial-haas`).
 
 ---

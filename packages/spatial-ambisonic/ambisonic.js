@@ -271,6 +271,152 @@ export function rotationMatrix (order, yaw = 0, pitch = 0, roll = 0) {
 	return transpose(Rt).map(r => Float32Array.from(r))
 }
 
+// ───────────────────────────── for a host: the same, into typed arrays made once ─────────────────────────────
+// A host's block allocates nothing (contract 1.0, process), and V8 makes a new object of a double handed to or returned
+// from a function it does not inline: below, only typed arrays and whole numbers cross a call, the norms are read from
+// a table, and legendre's recursion is written out. Each gives sh's and rotationMatrix's values to the bit.
+
+// shNorm(l, m, 'sn3d') by ACN index, to order 3
+const SN3D = Float64Array.from({ length: 16 }, (_, n) => { let l = acnDegree(n); return shNorm(l, n - l * l - l, 'sn3d') })
+
+/** sh(v[0], v[1], order) written into `out` from index `at` (a Float32Array holds sh's values; a Float64Array
+ *  shVecD's, before their rounding to float32). Allocates nothing. */
+export function shAt (out, at, v, order) {
+	let az = v[0] * DEG, x = sin(v[1] * DEG)
+	for (let l = 0; l <= order; l++) {
+		for (let m = -l; m <= l; m++) {
+			// legendre(l, |m|, x)
+			let k = m < 0 ? -m : m, pmm = 1, p
+			if (k > 0) {
+				let somx2 = sqrt((1 - x) * (1 + x))
+				let fact = 1
+				for (let i = 1; i <= k; i++) { pmm *= fact * somx2; fact += 2 }
+			}
+			if (l === k) p = pmm
+			else {
+				let pmmp1 = x * (2 * k + 1) * pmm
+				if (l === k + 1) p = pmmp1
+				else {
+					let pll = 0
+					for (let ll = k + 2; ll <= l; ll++) {
+						pll = (x * (2 * ll - 1) * pmmp1 - (ll + k - 1) * pmm) / (ll - k)
+						pmm = pmmp1; pmmp1 = pll
+					}
+					p = pll
+				}
+			}
+			let trig = m >= 0 ? cos(m * az) : sin(-m * az)
+			out[at + l * l + l + m] = SN3D[l * l + l + m] * p * trig
+		}
+	}
+}
+
+// out = A·B for 3×3 row-major arrays: matMul's order, and its skip of a zero factor
+function mul3 (A, B, out) {
+	for (let i = 0; i < 3; i++) {
+		out[i * 3] = out[i * 3 + 1] = out[i * 3 + 2] = 0
+		for (let p = 0; p < 3; p++) { let a = A[i * 3 + p]; if (!a) continue; for (let j = 0; j < 3; j++) out[i * 3 + j] += a * B[p * 3 + j] }
+	}
+}
+
+/**
+ * What a host rotates with, for one order: the parts of rotationMatrix's construction that do not depend on the angles
+ * (the directions, their unit vectors, pinv of their SH matrix), made once, and the arrays `rotationInto` writes: `v`
+ * [yaw, pitch, roll] in, `R` the matrix (rows of C, float32, rotationMatrix's) and `Rt` its transpose before rounding.
+ * Also the three fixed matrices `rotateRun` turns a signal with while the angles move (below).
+ */
+export function rotator (order) {
+	let C = (order + 1) ** 2, dirs = fibonacciSphere(mmax(64, 4 * C)), N = dirs.length
+	let rot = {
+		order, C, N,
+		xyz: Float64Array.from(dirs.flatMap(d => azElToXYZ(d.az, d.el))),
+		P: Float64Array.from(pinv(dirs.map(d => shVecD(d.az, d.el, order, 'sn3d'))).flat()),
+		Yr: new Float64Array(N * C), Rt: new Float64Array(C * C), R: new Float32Array(C * C),
+		Rz: new Float64Array(9), Ry: new Float64Array(9), Rx: new Float64Array(9), T: new Float64Array(9), M: new Float64Array(9),
+		v: new Float64Array(3), d: new Float64Array(2), u: new Float64Array(C), w: new Float64Array(C),
+		A: new Float64Array(C * C), B: new Float64Array(C * C), Q: new Float64Array(C * C),
+	}
+	// R(M) for M = Rz(yaw)·Ry(pitch)·Rx(roll) is the product of each factor's, since sh(M·u) = R(M)·sh(u) for every u.
+	// Ry(pitch) = X·Rz(pitch)·Xᵀ and Rx(roll) = Y·Rz(roll)·Yᵀ for the fixed quarter turns X = Rx(90°) (it takes the up
+	// axis to the right) and Y = Ry(−90°) (up to the front), so R(M) = Z(yaw)·R(X)·Z(pitch)·R(X)ᵀ·R(Y)·Z(roll)·R(Y)ᵀ:
+	// turns about the up axis (Z: each degree's ±m pair through cos and sin of m·angle) between fixed matrices A = R(Y)ᵀ,
+	// B = R(X)ᵀ·R(Y), Q = R(X). R(X) and R(Y) by the construction below, kept in double precision (Rt is Rᵀ)
+	let { A, B, Q, Rt, v } = rot, Xt = new Float64Array(C * C)
+	v[2] = 90; rotationInto(rot)
+	for (let r = 0; r < C; r++) for (let c = 0; c < C; c++) { Q[r * C + c] = Rt[c * C + r]; Xt[r * C + c] = Rt[r * C + c] }
+	v[1] = -90; v[2] = 0; rotationInto(rot)
+	A.set(Rt)
+	for (let r = 0; r < C; r++) for (let c = 0; c < C; c++) { let s = 0; for (let k = 0; k < C; k++) s += Xt[r * C + k] * Rt[c * C + k]; B[r * C + c] = s }
+	v[1] = 0; rotationInto(rot)
+	return rot
+}
+
+/** rotationMatrix(order, ...rot.v) into rot.R (float32, to the bit), and its transpose before rounding into rot.Rt.
+ *  Allocates nothing. */
+export function rotationInto (rot) {
+	let C = rot.C, N = rot.N, order = rot.order, v = rot.v, R = rot.R, Rt = rot.Rt
+	if (!v[0] && !v[1] && !v[2]) { R.fill(0); Rt.fill(0); for (let i = 0; i < C; i++) R[i * C + i] = Rt[i * C + i] = 1; return }
+	// rotationMatrix3
+	let Rz = rot.Rz, Ry = rot.Ry, Rx = rot.Rx, M = rot.M, T = rot.T
+	let y = v[0] * DEG, p = v[1] * DEG, r = v[2] * DEG
+	let cy = cos(y), sy = sin(y), cp = cos(p), sp = sin(p), cr = cos(r), sr = sin(r)
+	Rz[0] = cy; Rz[1] = -sy; Rz[2] = 0; Rz[3] = sy; Rz[4] = cy; Rz[5] = 0; Rz[6] = 0; Rz[7] = 0; Rz[8] = 1
+	Ry[0] = cp; Ry[1] = 0; Ry[2] = -sp; Ry[3] = 0; Ry[4] = 1; Ry[5] = 0; Ry[6] = sp; Ry[7] = 0; Ry[8] = cp
+	Rx[0] = 1; Rx[1] = 0; Rx[2] = 0; Rx[3] = 0; Rx[4] = cr; Rx[5] = -sr; Rx[6] = 0; Rx[7] = sr; Rx[8] = cr
+	mul3(Ry, Rx, T); mul3(Rz, T, M)
+	// each direction's rotated direction, and its SH: Yr's rows
+	let xyz = rot.xyz, d = rot.d, Yr = rot.Yr, P = rot.P
+	for (let q = 0; q < N; q++) {
+		let x = xyz[q * 3], yy = xyz[q * 3 + 1], z = xyz[q * 3 + 2]
+		let xr = M[0] * x + M[1] * yy + M[2] * z
+		let yr = M[3] * x + M[4] * yy + M[5] * z
+		let zr = M[6] * x + M[7] * yy + M[8] * z
+		d[0] = atan2(yr, xr) * RAD; d[1] = asin(mmax(-1, mmin(1, zr))) * RAD
+		shAt(Yr, q * C, d, order)
+	}
+	// Rt = pinv(Y)·Yr, matMul's order and skip; R its transpose, rounded
+	for (let i = 0; i < C; i++) {
+		for (let j = 0; j < C; j++) Rt[i * C + j] = 0
+		for (let q = 0; q < N; q++) { let a = P[i * N + q]; if (!a) continue; for (let j = 0; j < C; j++) Rt[i * C + j] += a * Yr[q * C + j] }
+	}
+	for (let i = 0; i < C; i++) for (let j = 0; j < C; j++) R[i * C + j] = Rt[j * C + i]
+}
+
+// y = M·x for a block-diagonal M (the rows and columns of one degree l together), C channels to `order`
+function blockMul (M, x, y, C, order) {
+	for (let l = 0; l <= order; l++) {
+		let a = l * l, b = a + 2 * l + 1
+		for (let r = a; r < b; r++) { let s = 0; for (let c = a; c < b; c++) s += M[r * C + c] * x[c]; y[r] = s }
+	}
+}
+// x turned in place about the up axis by deg[i] degrees: Z, on the ±m pair of each degree
+function turn (x, deg, i, order) {
+	let t = deg[i] * DEG
+	for (let l = 1; l <= order; l++) {
+		let o = l * l + l
+		for (let m = 1; m <= l; m++) {
+			let c = cos(m * t), s = sin(m * t), a = x[o + m], b = x[o - m]
+			x[o + m] = c * a - s * b
+			x[o - m] = s * a + c * b
+		}
+	}
+}
+
+/** `n` frames of `inp` rotated into `out` by angles that move, frame i by yaw[i], pitch[i], roll[i] degrees: R(M) as
+ *  turns about the up axis between the fixed matrices `rotator` made (its comment says why), a frame at a time, in
+ *  double precision. At angles held it is rotationMatrix's rotation within its rounding to float32. Allocates nothing;
+ *  `out` may be `inp`. */
+export function rotateRun (rot, inp, out, n, yaw, pitch, roll) {
+	let C = rot.C, order = rot.order, u = rot.u, w = rot.w
+	for (let i = 0; i < n; i++) {
+		for (let c = 0; c < C; c++) u[c] = inp[c][i]
+		blockMul(rot.A, u, w, C, order); turn(w, roll, i, order)
+		blockMul(rot.B, w, u, C, order); turn(u, pitch, i, order)
+		blockMul(rot.Q, u, w, C, order); turn(w, yaw, i, order)
+		for (let c = 0; c < C; c++) out[c][i] = w[c]
+	}
+}
+
 /** Rotate an ambisonic signal by yaw/pitch/roll (degrees). Returns new arrays. */
 export function rotate (channels, opts = {}) {
 	let order = orderFromChannels(channels.length)

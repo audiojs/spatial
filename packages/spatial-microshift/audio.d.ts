@@ -23,7 +23,7 @@ export declare const microshift: {
   channels: 2
   tail: 0.05
   params: {
-    /** 1..50 cents (default 9) [restart] */
+    /** 1..50 cents (default 9) */
     "cents": { type: "number", default: 9 }
     /** 0..1 (default 0.5) */
     "mix": { type: "number", default: 0.5 }

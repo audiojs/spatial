@@ -6,18 +6,19 @@
 import ms from './midside.js'
 
 export const midside = (ctx) => {
-	const p = {}
+	// the pair the kernel writes into is made once: a block makes nothing. The kernel reads `width` from the live
+	// values themselves (its one-sample array), so no number is copied into an object on the way
+	const pair = [null, null]
 	return (inputs, outputs, params) => {
 		const inp = inputs[0], out = outputs[0]
 		if (!inp || !inp.length) return
 		out[0].set(inp[0])
 		if (!inp[1]) return
 		out[1].set(inp[1])
-		if (params.mode === 'encode') ms.encode([out[0], out[1]])
-		else {
-			p.width = params.width[0]
-			ms.decode([out[0], out[1]], p)
-		}
+		pair[0] = out[0]; pair[1] = out[1]
+		if (params.mode === 'encode') ms.encode(pair)
+		else ms.decode(pair, params)
+		pair[0] = pair[1] = null   // the host's arrays are not kept past the call
 	}
 }
 midside.channels = 2

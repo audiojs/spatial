@@ -334,3 +334,133 @@ t('audio.js ambisonicRotate — ambisonic-1 → ambisonic-1, matrix cached acros
 	proc(inputs, out2, { yaw: p(90), pitch: p(0), roll: p(0) })
 	is(maxDiff(outputs[0], out2[0]), 0, 'cached rotation matrix gives bit-identical output on repeat')
 })
+
+// Channels per layout tag: contract 1.0 § Channels (stereo 2, quad 4, 5.1 6, 7.1 8, ambisonic-n (n+1)²)
+const WIDTH = { stereo: 2, quad: 4, '5.1': 6, '7.1': 8 }
+const width = tag => WIDTH[tag] ?? (Number(tag.split('-')[1]) + 1) ** 2
+
+t('audio.js: a choice of layouts is one bus { layouts }, each layout listed runs at its channel count, rotate lists the same on both sides', () => {
+	let AMBI = ['ambisonic-1', 'ambisonic-2', 'ambisonic-3']
+	is(ambisonicPanner.channels, { inputs: 1, outputs: [{ layouts: AMBI }] }, 'panner: a mono bus in, one bus of an ambisonic order out')
+	is(ambisonicDecoder.channels, { inputs: [{ layouts: AMBI }], outputs: [{ layouts: ['stereo', 'quad', '5.1', '7.1'] }] }, 'decoder: one bus of an ambisonic order in, one of a speaker layout out')
+	is(ambisonicRotate.channels.inputs, ambisonicRotate.channels.outputs, 'equal lists, which a host picks together')
+	// built with each pick a host can make, its buses as wide as the pick: every output channel written, and finite
+	let run = (proc, inTag, outTag, params) => {
+		let ins = inTag ? width(inTag) : 1, outs = width(outTag)
+		let f = proc(fakeCtx([inTag], [outTag], { maxChannels: Math.max(ins, outs) }))
+		let outputs = [Array.from({ length: outs }, () => new Float32Array(64).fill(NaN))]
+		f([Array.from({ length: ins }, (_, c) => sine(64, 200 + 50 * c))], outputs, params)
+		ok(outputs[0].every(ch => ch.every(Number.isFinite)), `${proc.name} ${inTag ?? 'mono'} → ${outTag}: ${outs} channels written`)
+	}
+	for (let o of ambisonicPanner.channels.outputs[0].layouts) run(ambisonicPanner, undefined, o, { az: p(30), el: p(10), gain: p(1) })
+	for (let i of ambisonicDecoder.channels.inputs[0].layouts)
+		for (let o of ambisonicDecoder.channels.outputs[0].layouts) run(ambisonicDecoder, i, o, { weighting: 'maxre', method: 'sampling' })
+	for (let l of ambisonicRotate.channels.inputs[0].layouts) run(ambisonicRotate, l, l, { yaw: p(90), pitch: p(20), roll: p(-15) })
+})
+
+// ───────────────────────────── for a host: typed forms, live values, no allocation ─────────────────────────────
+
+t('shAt, rotationInto: sh\'s and rotationMatrix\'s values to the bit, written into typed arrays; rotateRun at angles held: the matrix\'s rotation within float32', () => {
+	let seed = 11, r = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296
+	let pick = () => { let u = r(); return u < 0.1 ? 0 : u < 0.15 ? 90 : u < 0.2 ? -90 : u < 0.25 ? 180 : r() * 360 - 180 }
+	for (let order = 1; order <= 3; order++) {
+		let C = (order + 1) ** 2, y = new Float32Array(C), v = new Float64Array(2), rot = A.rotator(order), worst = 0
+		for (let k = 0; k < 500; k++) {
+			v[0] = pick(); v[1] = pick() / 2; A.shAt(y, 0, v, order)
+			ok(A.sh(v[0], v[1], order).every((x, i) => Object.is(x, y[i])), `order ${order}: sh(${v[0]}, ${v[1]})`)
+		}
+		for (let k = 0; k < 60; k++) {
+			let yaw = Math.fround(pick()), pitch = Math.fround(pick() / 2), roll = Math.fround(pick())
+			rot.v[0] = yaw; rot.v[1] = pitch; rot.v[2] = roll; A.rotationInto(rot)
+			let R = A.rotationMatrix(order, yaw, pitch, roll)
+			ok(R.every((row, i) => row.every((x, j) => Object.is(x, rot.R[i * C + j]))), `order ${order}: rotationMatrix(${yaw}, ${pitch}, ${roll})`)
+			let n = 8, inp = Array.from({ length: C }, () => Float32Array.from({ length: n }, () => r() * 2 - 1)), out = Array.from({ length: C }, () => new Float32Array(n))
+			A.rotateRun(rot, inp, out, n, new Float64Array(n).fill(yaw), new Float64Array(n).fill(pitch), new Float64Array(n).fill(roll))
+			for (let i = 0; i < C; i++) for (let s = 0; s < n; s++) { let x = 0; for (let j = 0; j < C; j++) x += R[i][j] * inp[j][s]; worst = Math.max(worst, Math.abs(out[i][s] - x)) }
+		}
+		ok(worst < 1e-6, `order ${order}: rotateRun within ${worst.toExponential(1)} of the matrix, inputs within ±1`)
+	}
+})
+
+// A host that ramps (contract 1.0, Parameters: smoothing and Time): `key` set to `to` at frame k is reached by a linear
+// ramp of the param's smoothing, each call handed the ramp's value at its first frame, calls of at most 32 frames while
+// it runs, split where it starts and ends; a param with no smoothing (an enum) changes at k
+function ramped (m, ctx, chans, outs, { block, set, key, to, k }) {
+	let s = m.params[key], R = s.smoothing ? Math.round(s.smoothing * FS) : 0, from = set[key] ?? s.default
+	let value = f => f < k ? from : f >= k + R ? to : to + (from - to) * (1 - (f - k) / R)
+	let values = f => Object.fromEntries(Object.entries(m.params).map(([q, d]) => { let v = q === key ? value(f) : set[q] ?? d.default; return [q, d.type === 'number' ? p(v) : v] }))
+	let n = chans[0].length, out = Array.from({ length: outs }, () => new Float32Array(n)), proc = m({ ...ctx, maxBlockSize: block })
+	for (let f = 0; f < n;) {
+		let e = Math.min(n, f + block)
+		if (f < k && e > k) e = k
+		if (f >= k && f < k + R) e = Math.min(e, f + 32, k + R)
+		proc([chans.map(c => c.subarray(f, e))], [out.map(c => c.subarray(f, e))], values(f))
+		f = e
+	}
+	return out
+}
+// the value a glide plays at frame i: the host's ramp from frame k over R frames, 32 frames late
+const late = (from, to, k, R, i) => i - 32 < k ? from : i - 32 >= k + R ? to : from + (to - from) * (i - 32 - k) / R
+const bitwise = (a, b) => a.every((c, j) => c.every((v, i) => Object.is(v, b[j][i])))
+
+t('audio.js ambisonicPanner, ambisonicRotate: az, el, gain, yaw, pitch, roll follow the host\'s ramp sample by sample, 32 frames late, in any cut of the calls (was: held for each call, a staircase)', () => {
+	let n = 2048, k = 600, R = Math.round(0.01 * FS), mono = sine(n, 220)
+	// the panner against sh at each frame's direction, times the gain
+	for (let [key, from, to, set] of [['az', -90, 90, { el: 10, gain: 1 }], ['el', -45, 45, { az: 30, gain: 1 }], ['gain', 1, 3, { az: 30, el: 10 }]]) {
+		let runs = [1, 32, 128].map(block => ramped(ambisonicPanner, fakeCtx(['mono'], ['ambisonic-2']), [mono], 9, { block, set: { ...set, [key]: from }, key, to, k })), worst = 0
+		for (let i = 0; i < n; i++) {
+			let w = late(Math.fround(from), Math.fround(to), k, R, i), v = { az: Math.fround(set.az ?? 0), el: Math.fround(set.el ?? 0), gain: Math.fround(set.gain ?? 1), [key]: w }
+			let y = A.sh(v.az, v.el, 2)
+			for (let o of runs) for (let c = 0; c < 9; c++) worst = Math.max(worst, Math.abs(o[c][i] - mono[i] * y[c] * v.gain))
+		}
+		ok(worst < 1e-6, `panner ${key} ${from} → ${to}: within ${worst.toExponential(1)} of the source at each frame's value, in calls of 1, 32 and 128`)
+	}
+	// the rotation against rotationMatrix at each frame's angles
+	let enc = A.encode(sine(n, 220), { order: 1, az: 20, el: 15 })
+	for (let [key, from, to] of [['yaw', -90, 90], ['pitch', -45, 45], ['roll', -90, 90]]) {
+		let set = { yaw: 10, pitch: 20, roll: -15, [key]: from }, runs = [1, 32, 128].map(block => ramped(ambisonicRotate, fakeCtx(['ambisonic-1'], ['ambisonic-1']), enc, 4, { block, set, key, to, k })), worst = 0
+		for (let i = 0; i < n; i++) {
+			let v = { yaw: Math.fround(set.yaw), pitch: Math.fround(set.pitch), roll: Math.fround(set.roll), [key]: late(Math.fround(from), Math.fround(to), k, R, i) }
+			let M = A.rotationMatrix(1, v.yaw, v.pitch, v.roll)
+			for (let o of runs) for (let r = 0; r < 4; r++) { let x = 0; for (let c = 0; c < 4; c++) x += M[r][c] * enc[c][i]; worst = Math.max(worst, Math.abs(o[r][i] - x)) }
+		}
+		ok(worst < 2e-6, `rotate ${key} ${from} → ${to}: within ${worst.toExponential(1)} of rotationMatrix at each frame's angles, in calls of 1, 32 and 128`)
+	}
+})
+
+t('audio.js ambisonicDecoder: a new weighting or method crossfades from the matrix in force over 20 ms, the same in any cut of the calls (was: a switch in one sample)', () => {
+	let n = 4096, k = 1000, L = Math.round(0.02 * FS), enc = A.encode(sine(n, 300), { order: 2, az: 40, el: 10 })
+	for (let [key, from, to] of [['weighting', 'maxre', 'inphase'], ['weighting', 'basic', 'maxre'], ['method', 'sampling', 'basic']]) {
+		let set = { weighting: 'maxre', method: 'sampling', [key]: from }, ctx = fakeCtx(['ambisonic-2'], ['stereo'])
+		let runs = [1, 7, 128, 4096].map(block => ramped(ambisonicDecoder, ctx, enc, 2, { block, set, key, to, k }))
+		ok(runs.every(o => bitwise(o, runs[2])), `${key} ${from} → ${to}: the same samples in calls of 1, 7, 128 and 4096`)
+		let D0 = A.decoderMatrix(2, 'stereo', set), D1 = A.decoderMatrix(2, 'stereo', { ...set, [key]: to }), worst = 0
+		for (let i = 0; i < n; i++) for (let s = 0; s < 2; s++) {
+			let a = 0, b = 0
+			for (let c = 0; c < 9; c++) { a += D0[s][c] * enc[c][i]; b += D1[s][c] * enc[c][i] }
+			let w = i < k ? 0 : Math.min(1, (i - k + 1) / L)
+			worst = Math.max(worst, Math.abs(runs[2][s][i] - (a * (1 - w) + b * w)))
+		}
+		ok(worst < 1e-6, `${key} ${from} → ${to}: within ${worst.toExponential(1)} of the line between the two matrices' outputs over ${L} frames`)
+	}
+	// a pair asked during a fade starts its own at the frame that one ends: maxre → inphase at k, → basic at k + 300
+	let at = f => f < k ? 'maxre' : f < k + 300 ? 'inphase' : 'basic', ctx = fakeCtx(['ambisonic-2'], ['stereo'])
+	let runs = [1, 7, 128, 4096].map(block => {
+		let proc = ambisonicDecoder({ ...ctx, maxBlockSize: block }), out = [new Float32Array(n), new Float32Array(n)]
+		for (let f = 0; f < n;) {
+			let e = Math.min(n, f + block)
+			for (let cut of [k, k + 300]) if (f < cut && e > cut) e = cut
+			proc([enc.map(c => c.subarray(f, e))], [out.map(c => c.subarray(f, e))], { weighting: at(f), method: 'sampling' })
+			f = e
+		}
+		return out
+	})
+	ok(runs.every(o => bitwise(o, runs[2])), 'two changes: the same samples in calls of 1, 7, 128 and 4096')
+	let Dm = A.decoderMatrix(2, 'stereo', { weighting: 'maxre' }), Di = A.decoderMatrix(2, 'stereo', { weighting: 'inphase' }), Db = A.decoderMatrix(2, 'stereo', { weighting: 'basic' }), worst = 0
+	for (let i = 0; i < n; i++) for (let s = 0; s < 2; s++) {
+		let y = M => { let x = 0; for (let c = 0; c < 9; c++) x += M[s][c] * enc[c][i]; return x }
+		let want = i < k ? y(Dm) : i < k + L ? y(Dm) * (1 - (i - k + 1) / L) + y(Di) * (i - k + 1) / L : i < k + 2 * L ? y(Di) * (1 - (i - k - L + 1) / L) + y(Db) * (i - k - L + 1) / L : y(Db)
+		worst = Math.max(worst, Math.abs(runs[2][s][i] - want))
+	}
+	ok(worst < 1e-6, `two changes: inphase reached at ${L} frames, then basic over the next ${L}: within ${worst.toExponential(1)}`)
+})
