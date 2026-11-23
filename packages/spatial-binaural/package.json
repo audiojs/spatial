@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-binaural",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Structural binaural panner — Brown-Duda spherical-head ITD + head-shadow ILD (no HRIR data)",
   "type": "module",
   "sideEffects": false,

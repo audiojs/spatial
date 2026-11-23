@@ -31,18 +31,18 @@
     "prepublishOnly": "node ../compile/tools/tested.js"
   },
   "dependencies": {
-    "@audio/spatial-panner": "^1.2.0",
-    "@audio/spatial-widener": "^1.2.0",
-    "@audio/spatial-haas": "^1.2.0",
-    "@audio/spatial-autopan": "^1.2.0",
+    "@audio/spatial-panner": "^1.2.1",
+    "@audio/spatial-widener": "^1.2.1",
+    "@audio/spatial-haas": "^1.2.1",
+    "@audio/spatial-autopan": "^1.2.1",
     "@audio/spatial-crossfeed": "^1.1.1",
-    "@audio/spatial-binaural": "^0.2.0",
-    "@audio/spatial-midside": "^1.2.0",
+    "@audio/spatial-binaural": "^0.2.1",
+    "@audio/spatial-midside": "^1.2.1",
     "@audio/spatial-channelsplit": "^1.0.1",
     "@audio/spatial-delay": "^1.0.1",
-    "@audio/spatial-microshift": "^1.2.0",
-    "@audio/spatial-surround": "^1.2.0",
-    "@audio/spatial-ambisonic": "^0.2.0"
+    "@audio/spatial-microshift": "^1.2.1",
+    "@audio/spatial-surround": "^1.2.1",
+    "@audio/spatial-ambisonic": "^0.2.1"
   },
   "keywords": [
     "audio",

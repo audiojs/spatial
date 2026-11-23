@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-panner",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Stereo panner — constant-power panning",
   "type": "module",
   "sideEffects": false,

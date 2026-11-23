@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-midside",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Mid/side encode-decode — L/R ↔ M/S matrix with width control",
   "type": "module",
   "sideEffects": false,

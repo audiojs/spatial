@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-ambisonic",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Ambisonics — encode/rotate/decode, 1st-3rd order (HOA), ACN/SN3D (AmbiX), FuMa conversion",
   "type": "module",
   "sideEffects": false,

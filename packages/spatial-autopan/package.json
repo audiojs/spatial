@@ -1,6 +1,6 @@
 {
   "name": "@audio/spatial-autopan",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Auto-panner — LFO-driven stereo panning. Constant-power cos/sin law",
   "type": "module",
   "sideEffects": false,
